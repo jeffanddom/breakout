@@ -18,7 +18,8 @@
   },
   "homepage": "https://github.com/jeffanddom/thegame#readme",
   "dependencies": {
-    "parcel": "^1.12.4"
+    "parcel": "^1.12.4",
+    "prettier": "^2.0.5"
   },
   "devDependencies": {
     "glslify-bundle": "^5.1.1",
