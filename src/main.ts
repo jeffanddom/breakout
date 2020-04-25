@@ -1,4 +1,4 @@
-import { Playfield } from './Playfield'
+import { BrickGrid } from './BrickGrid'
 import { Direction, Rect } from './common'
 
 const canvas = document.createElement('canvas')
@@ -56,11 +56,9 @@ let ballRadius = 12
 let ballVX = 7
 let ballVY = 4
 
-let brickW = 80
-let brickH = 30
-let playfield = new Playfield(10, 10)
+let grid = new BrickGrid(10, 10)
 
-playfield.bricks[9][5].dead = true
+grid.bricks[9][5].dead = true
 
 const overlap = (a: [number, number], b: [number, number]): boolean => {
   return a[1] > b[0] && b[1] > a[0]
@@ -152,7 +150,7 @@ function gameLoop() {
   let didXCollide = false
   let didYCollide = false
   const collisions = []
-  playfield.bricks.forEach((row) => {
+  grid.bricks.forEach((row) => {
     row.forEach((b) => {
       if (b.dead) return
       ballCollision(b.aabb()).forEach((edge) =>
@@ -165,7 +163,7 @@ function gameLoop() {
 
   collisions
     .filter(({ brick, edge }) => {
-      let n = playfield.neighbor(brick, edge)
+      let n = grid.neighbor(brick, edge)
       return n === null || n.dead
     })
     .forEach(({ brick, edge }) => {
@@ -202,7 +200,7 @@ function gameLoop() {
   ctx.fill()
 
   // Draw bricks
-  playfield.render(ctx)
+  grid.render(ctx)
 }
 
 gameLoop()
