@@ -1,7 +1,7 @@
 import { Brick } from './Brick'
 import { Direction } from './common'
 
-export class Playfield {
+export class BrickGrid {
   rows: number
   cols: number
   bricks: Brick[][]
