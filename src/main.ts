@@ -1,103 +1,5 @@
-const width = 600
-const height = 600
-const brickWidth = 60
-const brickHeight = 20
-
-enum Direction {
-  N,
-  S,
-  W,
-  E,
-}
-
-class Brick {
-  i: number
-  j: number
-  dead: boolean
-
-  constructor(i: number, j: number) {
-    this.i = i
-    this.j = j
-    this.dead = false
-  }
-
-  x(): number {
-    return this.j * brickWidth
-  }
-
-  y(): number {
-    return this.i * brickHeight
-  }
-
-  aabb(): Rect {
-    return { x: this.x(), y: this.y(), w: brickWidth, h: brickHeight }
-  }
-
-  extrema() {
-    return [
-      [this.x(), this.y()],
-      [this.x() + brickWidth, this.y() + brickHeight],
-    ]
-  }
-
-  render(ctx: CanvasRenderingContext2D) {
-    if (this.dead) return
-
-    ctx.fillStyle = 'red'
-    ctx.strokeStyle = 'yellow'
-    ctx.fillRect(this.x(), this.y(), brickWidth, brickHeight)
-    ctx.strokeRect(this.x(), this.y(), brickWidth, brickHeight)
-  }
-}
-
-class Playfield {
-  rows: number
-  cols: number
-  bricks: Brick[][]
-
-  constructor(rows: number, cols: number) {
-    this.rows = rows
-    this.cols = cols
-    this.bricks = []
-
-    for (let i = 0; i < rows; i++) {
-      let row = []
-      this.bricks.push(row)
-      for (let j = 0; j < cols; j++) {
-        row.push(new Brick(i, j))
-      }
-    }
-  }
-
-  neighbor(b: Brick, d: Direction): Brick | null {
-    let i = b.i
-    let j = b.j
-    switch (d) {
-      case Direction.N:
-        i -= 1
-        break
-      case Direction.S:
-        i += 1
-        break
-      case Direction.W:
-        j -= 1
-        break
-      case Direction.E:
-        j += 1
-        break
-    }
-
-    if (i < 0 || this.rows <= i) return null
-    if (j < 0 || this.cols <= j) return null
-    return this.bricks[i][j]
-  }
-
-  render(ctx: CanvasRenderingContext2D) {
-    this.bricks.forEach((row) => {
-      row.forEach((b) => b.render(ctx))
-    })
-  }
-}
+import { Playfield } from './Playfield'
+import { Direction, Rect } from './common'
 
 const canvas = document.createElement('canvas')
 document.body.appendChild(canvas)
@@ -107,12 +9,15 @@ if (!ctx) {
   throw new Error('Could not initialize canvas 2D context')
 }
 
+const width = 600
+const height = 600
+
 canvas.width = width
 canvas.height = height
 
 // Clear canvas to black
 ctx.fillStyle = 'rgba(0,0,0,1)'
-ctx.fillRect(0, 0, 600, 600)
+ctx.fillRect(0, 0, width, height)
 
 const keyDown = new Set()
 document.addEventListener('focusout', () => {
@@ -136,13 +41,6 @@ function clamp(v: number, min: number, max: number): number {
   if (v < min) return min
   if (v > max) return max
   return v
-}
-
-interface Rect {
-  x: number
-  y: number
-  w: number
-  h: number
 }
 
 let xSize = 120
@@ -197,9 +95,6 @@ const ballCollision = (rect: Rect): Direction[] => {
 
   const edges = []
 
-  let nw = [rect.x, rect.y]
-  let se = [rect.x + rect.width, rect.y + rect.height]
-
   const prevOverlapX = overlap(
     [rect.x, rect.x + rect.w],
     [prevRect.x, prevRect.x + prevRect.w],
@@ -239,8 +134,6 @@ function gameLoop() {
   ctx.fillRect(paddleX, paddleY, xSize, ySize)
 
   // Simulate ball
-  let prevBallX = ballX
-  let prevBallY = ballY
 
   ballX = ballX + ballVX
   ballY = ballY + ballVY
@@ -256,7 +149,6 @@ function gameLoop() {
     ballVY = -ballVY // bounce off paddle
   }
 
-  const toDelete = []
   let didXCollide = false
   let didYCollide = false
   const collisions = []
