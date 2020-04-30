@@ -53,12 +53,18 @@ let ballY = 300
 let prevBallX = ballX
 let prevBallY = ballY
 let ballRadius = 12
-let ballVX = 7
-let ballVY = 4
+const startingBallVX = 0
+let ballVX = startingBallVX
+const maxBallSpeed = 9
+
+let paddleVelocity = 0
+let paddleAcceleration = 0.2
+
+const calcVY = () => Math.sqrt(Math.pow(maxBallSpeed, 2) - Math.pow(ballVX, 2))
+const startingBallVY = calcVY()
+let ballVY = startingBallVY
 
 let grid = new BrickGrid(10, 10)
-
-grid.bricks[9][5].dead = true
 
 const overlap = (a: [number, number], b: [number, number]): boolean => {
   return a[1] > b[0] && b[1] > a[0]
@@ -120,19 +126,29 @@ function gameLoop() {
   ctx.fillRect(0, 0, width, height)
 
   // Simulate paddle
-  const paddleSpeed = 7
   if (keyDown.has(keyMap.right)) {
-    paddleX = paddleX + paddleSpeed
+    if (paddleVelocity < 0) {
+      paddleVelocity += paddleAcceleration * 1.5
+    }
+    paddleVelocity += paddleAcceleration
   } else if (keyDown.has(keyMap.left)) {
-    paddleX = paddleX - paddleSpeed
+    if (paddleVelocity > 0) {
+      paddleVelocity -= paddleAcceleration * 1.5
+    }
+    paddleVelocity -= paddleAcceleration
+  } else {
+    paddleVelocity += -0.075 * Math.sign(paddleVelocity)
   }
+  paddleX = paddleX + paddleVelocity
 
   paddleX = clamp(paddleX, 0, width - xSize)
+  if (paddleX === 0 || paddleX === width - xSize) {
+    paddleVelocity = -paddleVelocity * 0.35
+  }
   ctx.fillStyle = 'green'
   ctx.fillRect(paddleX, paddleY, xSize, ySize)
 
   // Simulate ball
-
   ballX = ballX + ballVX
   ballY = ballY + ballVY
 
@@ -144,7 +160,10 @@ function gameLoop() {
   }
   let edges = ballCollision(paddleRect)
   if (edges.includes(Direction.N)) {
-    ballVY = -ballVY // bounce off paddle
+    ballVX += paddleVelocity * 0.25
+    ballVX = Math.sign(ballVX) * Math.min(maxBallSpeed * 0.8, Math.abs(ballVX))
+
+    ballVY = -Math.sqrt(Math.pow(maxBallSpeed, 2) - Math.pow(ballVX, 2))
   }
 
   let didXCollide = false
@@ -158,8 +177,6 @@ function gameLoop() {
       )
     })
   })
-
-  if (collisions.length > 0) console.log(collisions)
 
   collisions
     .filter(({ brick, edge }) => {
@@ -201,6 +218,17 @@ function gameLoop() {
 
   // Draw bricks
   grid.render(ctx)
+
+  // Reset upon death
+  if (ballY + ballRadius >= height) {
+    grid = new BrickGrid(10, 10)
+    paddleX = width / 2 - xSize / 2
+    paddleVelocity = 0
+    ballX = 300
+    ballY = 300
+    ballVX = startingBallVX
+    ballVY = startingBallVY
+  }
 }
 
 gameLoop()
